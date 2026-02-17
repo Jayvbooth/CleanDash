@@ -66,11 +66,11 @@ export function DashboardPageLayout({
         <DashboardSidebar />
         <main
           ref={mainRef}
-          className={cn("flex-1 overflow-y-auto bg-slate-50", mainClassName)}
+          className={cn("flex-1 overflow-y-auto bg-app", mainClassName)}
         >
           <div
             className={cn(
-              "border-b border-slate-200 bg-white",
+              "border-b border-border surface-panel",
               stickyHeader && "sticky top-0 z-30",
               headerClassName,
             )}
@@ -79,11 +79,11 @@ export function DashboardPageLayout({
               {headerActions ? (
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h1 className="font-heading text-2xl font-semibold tracking-tight text-slate-900">
+                    <h1 className="font-heading text-2xl font-semibold tracking-tight text-strong">
                       {title}
                     </h1>
                     {description ? (
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-muted">
                         {description}
                       </p>
                     ) : null}
@@ -92,18 +92,18 @@ export function DashboardPageLayout({
                 </div>
               ) : (
                 <div>
-                  <h1 className="font-heading text-2xl font-semibold tracking-tight text-slate-900">
+                  <h1 className="font-heading text-2xl font-semibold tracking-tight text-strong">
                     {title}
                   </h1>
                   {description ? (
-                    <p className="mt-1 text-sm text-slate-500">{description}</p>
+                    <p className="mt-1 text-sm text-muted">{description}</p>
                   ) : null}
                 </div>
               )}
             </div>
           </div>
 
-          <div className={cn("p-8", contentClassName)}>
+          <div className={cn("mc-page-content", contentClassName)}>
             {showAdminOnlyNotice ? (
               <AdminOnlyNotice message={adminOnlyMessage ?? ""} />
             ) : (

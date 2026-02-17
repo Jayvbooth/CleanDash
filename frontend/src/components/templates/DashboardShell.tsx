@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -16,10 +16,17 @@ import { OrgSwitcher } from "@/components/organisms/OrgSwitcher";
 import { UserMenu } from "@/components/organisms/UserMenu";
 import { isOnboardingComplete } from "@/lib/onboarding";
 
+type Density = "compact" | "roomy";
+
 export function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
+  const [density, setDensity] = useState<Density>(() => {
+    if (typeof window === "undefined") return "roomy";
+    const saved = window.localStorage.getItem("mc-density");
+    return saved === "compact" || saved === "roomy" ? saved : "roomy";
+  });
   const isOnboardingPath = pathname === "/onboarding";
 
   const meQuery = useGetMeApiV1UsersMeGet<
@@ -37,6 +44,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const displayEmail = profile?.email ?? "";
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("mc-density", density);
+  }, [density]);
+
+  useEffect(() => {
     if (!isSignedIn || isOnboardingPath) return;
     if (!profile) return;
     if (!isOnboardingComplete(profile)) {
@@ -44,33 +56,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     }
   }, [isOnboardingPath, isSignedIn, profile, router]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key !== "openclaw_org_switch" || !event.newValue) return;
-      window.location.reload();
-    };
-
-    window.addEventListener("storage", handleStorage);
-
-    let channel: BroadcastChannel | null = null;
-    if ("BroadcastChannel" in window) {
-      channel = new BroadcastChannel("org-switch");
-      channel.onmessage = () => {
-        window.location.reload();
-      };
-    }
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      channel?.close();
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-app text-strong">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
+    <div className={`min-h-screen bg-app text-strong mc-density-${density}`}>
+      <header className="sticky top-0 z-40 border-b border-[var(--mc-stroke)] bg-[var(--mc-panel)]">
         <div className="grid grid-cols-[260px_1fr_auto] items-center gap-0 py-3">
           <div className="flex items-center px-6">
             <BrandMark />
@@ -84,18 +72,32 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </SignedIn>
           <SignedIn>
             <div className="flex items-center gap-3 px-6">
+              <div className="hidden items-center gap-1 sm:flex">
+                <button
+                  type="button"
+                  className={`mc-button ${density === "compact" ? "mc-button-primary" : ""}`}
+                  onClick={() => setDensity("compact")}
+                >
+                  Compact
+                </button>
+                <button
+                  type="button"
+                  className={`mc-button ${density === "roomy" ? "mc-button-primary" : ""}`}
+                  onClick={() => setDensity("roomy")}
+                >
+                  Roomy
+                </button>
+              </div>
               <div className="hidden text-right lg:block">
-                <p className="text-sm font-semibold text-slate-900">
-                  {displayName}
-                </p>
-                <p className="text-xs text-slate-500">Operator</p>
+                <p className="text-sm font-semibold text-strong">{displayName}</p>
+                <p className="text-xs text-muted">Operator</p>
               </div>
               <UserMenu displayName={displayName} displayEmail={displayEmail} />
             </div>
           </SignedIn>
         </div>
       </header>
-      <div className="grid min-h-[calc(100vh-64px)] grid-cols-[260px_1fr] bg-slate-50">
+      <div className="grid min-h-[calc(100vh-64px)] grid-cols-[260px_1fr] bg-app mc-grid mc-light-pools">
         {children}
       </div>
     </div>
